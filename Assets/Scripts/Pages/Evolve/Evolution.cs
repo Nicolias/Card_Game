@@ -59,4 +59,10 @@ public class Evolution : MonoBehaviour
 
         return evolvedCard;
     }
+
+    private float GetAvargeValue(int firstValue, int secondeValue)
+    {
+        return (firstValue + secondeValue) / 2;
+    }
 }
+

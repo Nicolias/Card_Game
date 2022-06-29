@@ -1,12 +1,8 @@
 using Data;
+using Infrastructure.Services;
 
 public class DefDeck : Deck
 {
-    private void Awake()
-    { 
-        _deckType = AtackOrDefCardType.Def;
-    }
-
     protected override void InitCards(DataSaveLoadService data)
     {
         if (data.PlayerData.AttackDecks == null)
@@ -17,7 +13,7 @@ public class DefDeck : Deck
                 _cardsInDeck[i].Render(data.PlayerData.DefDecks[i]);
     }
 
-    protected override void SaveDesks()
+    protected override void SaveDecks()
     {
         var cards = new Card[_cardsInDeck.Count];
 

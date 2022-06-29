@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Data;
-using Roulette;
+using Infrastructure.Services;
 using UnityEngine;
 using Zenject;
 
@@ -9,18 +9,12 @@ namespace Pages.Collection
 {
     public class CardCollection : MonoBehaviour
     {
-        [SerializeField] private List<CardCollectionCell> _cards;
         [SerializeField] private CardCollectionCell _cardCellTemplate;
         [SerializeField] private Transform _container;
 
-        [SerializeField] private Shop _shop;
-        [SerializeField] private RoulettePage _roulettePage;
-        [SerializeField] private StartGame _startGame;
-        [SerializeField] private Evolution _evolution;
-
-        [SerializeField] private LinkBetweenCardsAndCollections _linkBetweenCardCollectionAndDeck;
-
         [SerializeField] private StatisticWindow _statisticWindow;
+
+        private List<CardCollectionCell> _cards = new();
 
         private DataSaveLoadService _dataSaveLoadService;
         
@@ -32,29 +26,9 @@ namespace Pages.Collection
             _dataSaveLoadService = dataSaveLoadService;
         }
 
-        private void Awake()
+        private void Start()
         {
-            //_cards = _dataSaveLoadService.PlayerData.InventoryDecks; //загрузить
-            //_dataSaveLoadService.SetInventoryDecks(_cards); //сохранить
-            
-            _linkBetweenCardCollectionAndDeck.OnOpenCardCollection += () => gameObject.SetActive(true);
-
-            _linkBetweenCardCollectionAndDeck.OnSelectedDeckCard += (CardCell cardCell, AtackOrDefCardType deckType, int positionCardInDeck) =>
-            {
-                if (cardCell.Card.Rarity != RarityCard.Epmpty)
-                {
-                    _cards.Remove((CardCollectionCell)cardCell);
-                    Destroy(cardCell.gameObject);
-                }
-            };
-
-            _linkBetweenCardCollectionAndDeck.OnRetrieveCard += RetrieveCardCell;
-
-            _shop.OnCardsBuy += AddCards;
-            _startGame.OnSetStartPackCards += AddCards;
-            _roulettePage.OnReceivedCard += AddCard;
-
-            gameObject.SetActive(false);
+            AddCards(_dataSaveLoadService.PlayerData.InventoryDecks);
         }
 
         private void OnEnable()
@@ -71,6 +45,11 @@ namespace Pages.Collection
             _cards = _cards.OrderByDescending(e => e.Card.Rarity).ToList();
             Render(_cards);
             //_statisticWindow.gameObject.SetActive(false);
+        }
+
+        private void OnApplicationQuit()
+        {
+            SaveCards();
         }
 
         public void AttackSort()
@@ -119,11 +98,16 @@ namespace Pages.Collection
                 cards[i].transform.SetSiblingIndex(i);
         }
 
-        private void RetrieveCardCell(CardCell card)
+        private void SaveCards()
         {
-            var cell = Instantiate(_cardCellTemplate, _container);
-            cell.SwitchComponentValue(card);
-            _cards.Add(cell);
+            List<Card> cardCollection = new();
+
+            foreach (var cardCell in _cards)
+            {
+                cardCollection.Add(cardCell.Card);
+            }
+
+            _dataSaveLoadService.SetInventoryDecks(cardCollection.ToArray());
         }
 
         public void AddCards(Card[] newCards)
@@ -153,6 +137,8 @@ namespace Pages.Collection
 
                 _cards.Remove(card);
             }
+
+            SaveCards();
         }
     }
 }

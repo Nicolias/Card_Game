@@ -1,4 +1,6 @@
+using Infrastructure.Services;
 using Roulette;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
 using Image = UnityEngine.UI.Image;
@@ -55,7 +57,7 @@ public class Card : ScriptableObject, ICard, IRoulette
 
     [SerializeField] 
     private Image _attackIcon;
-    
+
     public Sprite UIIcon => _currentImage;
     public string Name => _name;
 
@@ -88,11 +90,11 @@ public class Card : ScriptableObject, ICard, IRoulette
     {
         if (firstCard.CardCell.UIIcon != secondCard.CardCell.UIIcon || _evolution == 2) throw new System.InvalidOperationException();
 
-        float valueIncreaseMultiplier  = 1.35f;
+        float valueIncreaseMultiplier = 1.35f;
 
         int GetLevelUpValue(int firstValue, int secondValue)
         {
-            return (int)((firstValue + secondValue) / 2 * valueIncreaseMultiplier );
+            return (int)((firstValue + secondValue) / 2 * valueIncreaseMultiplier);
         }
 
         _attack = GetLevelUpValue(firstCard.CardCell.Attack, secondCard.CardCell.Attack);
@@ -108,5 +110,22 @@ public class Card : ScriptableObject, ICard, IRoulette
         var roulettePage = FindObjectOfType<RoulettePage>().gameObject.GetComponent<RoulettePage>();
 
         roulettePage.AccrueCard(this);
+    }
+
+    public Sprite GetFrame(Sprite[] _frames)
+    {
+        switch (_race)
+        {
+            case RaceCard.Demons:
+                return _frames[0];
+
+            case RaceCard.Gods:
+                return _frames[1];
+
+            case RaceCard.Humans:
+                return _frames[2];
+        }
+
+        return null;
     }
 }

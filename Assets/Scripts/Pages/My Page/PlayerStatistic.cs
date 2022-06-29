@@ -1,4 +1,8 @@
+using System.Collections;
+using System.Globalization;
 using Data;
+using DG.Tweening;
+using Infrastructure.Services;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -26,9 +30,6 @@ namespace Pages.My_Page
         [SerializeField]
         private Slider _xpSlider;
 
-        [SerializeField] 
-        private Sprite[] _avatars;
-        
         private DataSaveLoadService _data;
         
         [Inject]
@@ -39,39 +40,31 @@ namespace Pages.My_Page
         
         private void Start()
         {
-            _nickName.text = RandomNickName();
-            _avatar.sprite = RandomAvatar();
-
-            /*_player.OnLevelChange += level => _levelText.text = level.ToString() + "/100";
-        
-            _player.OnEnergyChange += energy =>
-            {
-                _energyText.text = energy + "/25";
-                _energySlider.value = energy;
-            };*/
+            UpdateDisplay();
+            
+            //_avatar.sprite = _data.PlayerData.Avatar;
         }
-
-        private string RandomNickName()
-        {
-            var nickNames = new[]
-                { "Tijagi", "Luxulo", "Lofuwa", "Xyboda", "Sopogy", "Lydiba", "Dekale", "Tareqi", "Muqawo", "Dejalo" };
-
-            return nickNames[Random.Range(0, nickNames.Length)];
-        }
-
-        private Sprite RandomAvatar() =>
-            _avatars[Random.Range(0, _avatars.Length)];
 
         public void UpdateDisplay()
         {
-            _levelText.text = 1.ToString();
-            _rankText.text = 1500.ToString();
-            _energyText.text = _player.Energy.ToString();
-            _xpText.text = _player.Exp.ToString();
+            UpdateSlider(_energySlider, _data.PlayerData.Energy);
+            UpdateSlider(_xpSlider, _data.PlayerData.XP);
+            
+            _nickName.text = _data.PlayerData.Nickname;
+            _levelText.text = _data.PlayerData.Level.ToString();
+            _rankText.text = _data.PlayerData.Rank.ToString();
+            _energyText.text = _data.PlayerData.Energy.ToString(CultureInfo.InvariantCulture);
+            _xpText.text = _player.Exp.ToString(CultureInfo.InvariantCulture);
             _xpSlider.value = _player.Exp;
-            _heroesText.text = 5.ToString() + '/' + 25.ToString();
+            _heroesText.text = 5.ToString() + '/' + 25;
             _powerText.text = 90.ToString();
             _goldText.text = _data.PlayerData.Coins.ToString();
+        }
+
+        private void UpdateSlider(Slider slider, float value)
+        {
+            slider.value = 0;
+            DOTween.To(()=> slider.value, x=> slider.value = x, value, 1); 
         }
     }
 }
