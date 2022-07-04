@@ -5,38 +5,50 @@ using UnityEngine.UI;
 
 public class EvolutionCardCell : CardCell
 {
-    private EvolveCardCollection _evolveCardCollection;
-    private CardCollectionCell _cardInCollection;
+    [SerializeField] 
+    private Button _button;
 
+    private CardCollectionCell _cardInCollection;
+    private EvolveCardCollection _evolveCardCollection;
     private SelectPanel _selectPanel;
 
-    private void Start()
-    {
-        _evolveCardCollection = FindObjectOfType<EvolveCardCollection>().gameObject.GetComponent<EvolveCardCollection>();
-        _selectPanel = FindObjectOfType<SelectPanel>().gameObject.GetComponent<SelectPanel>();
-    }
-
+    private bool _isInit;
+    
     private void OnEnable()
     {
-      GetComponent<Button>().onClick.AddListener(SelectCard);
+        _button.onClick.AddListener(SelectCard);
     }
 
     private void OnDisable()
     {
-        GetComponent<Button>().onClick.RemoveListener(SelectCard);
-        _selectPanel.Reset();
+        _button.onClick.RemoveListener(SelectCard);
+        
+        if (_selectPanel != null)
+            _selectPanel.Reset();
     }
 
+    public void Init(EvolveCardCollection evolveCardCollection, SelectPanel selectPanel)
+    {
+        if (evolveCardCollection == null || selectPanel == null)
+            Debug.LogError("Ссылки не указаны");
+        
+        _evolveCardCollection = evolveCardCollection;
+        _selectPanel = selectPanel;
+
+        _isInit = true;
+    }
+    
     public void SetLinkOnCardInCollection(CardCollectionCell cardInCollection)
     {
-        if (cardInCollection == null) throw new System.NullReferenceException();
+        if (cardInCollection == null) 
+            throw new System.NullReferenceException();
 
         _cardInCollection = cardInCollection;
     }
 
     private void SelectCard()
     {
-        _evolveCardCollection.SelectCard(_cardInCollection);
         _selectPanel.SetPanelAboveSelectCard(this);
+        _evolveCardCollection.SelectCard(_cardInCollection);
     }
 }

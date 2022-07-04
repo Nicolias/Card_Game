@@ -1,10 +1,14 @@
+using Data;
+using Infrastructure.Services;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
+using Zenject;
 
 public class Evolution : MonoBehaviour
 {
-    public event UnityAction OnEvolvedCard;
+    private const float ValueIncreaseMultiplier = 1.35f;
+    private const float ValueLevelUpIncreaseMultiplier = 1.15f;
 
     [SerializeField] private CardCollection _cardCollection;
     [SerializeField] private EvolveCardCollection _evolveCardCollection;
@@ -18,9 +22,20 @@ public class Evolution : MonoBehaviour
     [SerializeField] private GameObject _evolvedCardWindow;
     [SerializeField] private Image _evolvedCardImage;
 
+    private DataSaveLoadService _dataSaveLoadService;
+    private AssetProviderService _assetProviderService;
+    
+    public event UnityAction OnEvolvedCard;
     public EvolutionCard FirstCard => _firstCardForEvolution;
     public EvolutionCard SecondeCard => _secondeCardForEvolution;
 
+    [Inject]
+    private void Construct(DataSaveLoadService dataSaveLoadService, AssetProviderService assetProviderService)
+    {
+        _dataSaveLoadService = dataSaveLoadService;
+        _assetProviderService = assetProviderService;
+    }
+    
     private void OnEnable()
     {
         _evolveCardCollection.SetCardCollection(_cardCollection.Cards);
@@ -39,6 +54,7 @@ public class Evolution : MonoBehaviour
         {
             _cardCollection.AddCard(GetEvolvedCard());
             _cardCollection.DeleteCards(new[] { FirstCard.CardCell, SecondeCard.CardCell });
+            _dataSaveLoadService.SetInventoryDecks(_cardCollection.Cards);
             OnEvolvedCard?.Invoke();
         }
         else
@@ -47,16 +63,34 @@ public class Evolution : MonoBehaviour
         }
     }
 
-    private Card GetEvolvedCard()
+    private CardData GetEvolvedCard()
     {
-        Card evolvedCard = Instantiate(_firstCardForEvolution.CardCell.Card);
-
-        evolvedCard.Evolve(_firstCardForEvolution, _secondeCardForEvolution);
+        CardData evolvedCard = Evolve(_firstCardForEvolution, _secondeCardForEvolution);
 
         _evolvedCardWindow.SetActive(true);
-        _evolvedCardImage.sprite = evolvedCard.UIIcon;
+        _evolvedCardImage.sprite = _assetProviderService.AllCards[evolvedCard.Id].ImageSecondeEvolution;
 
         return evolvedCard;
+    }
+    
+    private CardData Evolve(EvolutionCard firstCard, EvolutionCard secondCard)
+    {
+        CardData evolvedCard = new CardData();
+
+        evolvedCard.Attack = GetEvolveUpValue(firstCard.CardCell.CardData.Attack, secondCard.CardCell.CardData.Attack);
+        evolvedCard.Defence = GetEvolveUpValue(firstCard.CardCell.CardData.Defence, secondCard.CardCell.CardData.Attack);
+        evolvedCard.Health = GetEvolveUpValue(firstCard.CardCell.CardData.Health, secondCard.CardCell.CardData.Attack);
+        evolvedCard.Id = firstCard.CardCell.CardData.Id;
+        evolvedCard.Evolution = 2;
+
+        return evolvedCard;
+    }
+    
+    private int GetEvolveUpValue(int firstValue, int secondValue)
+    {
+        var average = (firstValue + secondValue) / 2;
+        var evolveUpValue = average * ValueIncreaseMultiplier;
+        return (int)evolveUpValue;
     }
 }
 

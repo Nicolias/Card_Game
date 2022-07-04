@@ -8,7 +8,7 @@ namespace Infrastructure
     public class BootstrapInstaller : MonoInstaller
     {
         [SerializeField]
-        private Card _emptyCard;
+        private Card[] _allCards;
         
         [SerializeField]
         private Sprite[] _avatars;
@@ -16,35 +16,42 @@ namespace Infrastructure
         [SerializeField]
         private Sprite[] _frames;
         
-        private DataSaveLoadService _data;
+        private DataSaveLoadService _dataSaveLoadService;
         private AssetProviderService _assetProviderService;
         
         public override void InstallBindings()
         {
-            BindPlayerData();
             BindAssetProvider();
-        }
-
-        private void BindPlayerData()
-        {
-            _data = new DataSaveLoadService(_emptyCard, _avatars);
-            
-            Container
-                .Bind<DataSaveLoadService>()
-                .FromInstance(_data)
-                .AsSingle();
-            
-            _data.Load();
+            BindPlayerData();
+            InitAllService();
         }
 
         private void BindAssetProvider()
         {
-            _assetProviderService = new AssetProviderService(_frames);
+            _assetProviderService = new AssetProviderService(_frames, _allCards);
             
             Container
                 .Bind<AssetProviderService>()
                 .FromInstance(_assetProviderService)
                 .AsSingle();
+        }
+
+        private void BindPlayerData()
+        {
+            _dataSaveLoadService = new DataSaveLoadService(_allCards, _avatars);
+            
+            Container
+                .Bind<DataSaveLoadService>()
+                .FromInstance(_dataSaveLoadService)
+                .AsSingle();
+            
+            _dataSaveLoadService.Load();
+        }
+        
+        private void InitAllService()
+        {
+            AllServices.AssetProviderService = _assetProviderService;
+            AllServices.DataSaveLoadService = _dataSaveLoadService;
         }
     }
 }

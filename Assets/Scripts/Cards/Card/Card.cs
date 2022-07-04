@@ -1,14 +1,14 @@
+using Data;
 using Infrastructure.Services;
 using Roulette;
 using UnityEditor;
 using UnityEngine;
-using UnityEngine.UIElements;
-using Image = UnityEngine.UI.Image;
+using UnityEngine.UI;
 
 public enum RarityCard
 {
-    Epmpty,
-    Standard,
+    Empty,
+    Standart,
     Rarity
 }
 
@@ -22,13 +22,8 @@ public enum RaceCard
 [CreateAssetMenu(fileName = "Card", menuName = "ScriptableObjects/Card")]
 public class Card : ScriptableObject, ICard, IRoulette
 {
-    [SerializeField] private Sprite _currentImage;
-
     [SerializeField] private Sprite _imageFirstEvolution;
     [SerializeField] private Sprite _imageSecondeEvolution;
-    private int _evolution = 1;
-    public int Evoulution => _evolution;
-
     [SerializeField] private string _name;
 
     [SerializeField] private RarityCard _rarity;
@@ -40,7 +35,6 @@ public class Card : ScriptableObject, ICard, IRoulette
     private int _level = 1;
 
     [SerializeField] private string _attackSillName;
-    [SerializeField] private int _attackSkill;
 
     [SerializeField] private string _defSkillName;
     [SerializeField] private int _defSkill;
@@ -56,9 +50,26 @@ public class Card : ScriptableObject, ICard, IRoulette
     private ParticleSystem _attackEffect;
 
     [SerializeField] 
-    private Image _attackIcon;
+    private Sprite _skillIcon;
 
-    public Sprite UIIcon => _currentImage;
+    private int _currentLevelPoint;
+    private int _maxLevelPoint = 1000;
+    private int _evolution = 1;
+    public int Evolution => _evolution;
+    public int LevelPoint => _currentLevelPoint;
+    public int MaxLevelPoint => _maxLevelPoint;
+    
+    public Sprite UIIcon
+    {
+        get
+        {
+            if (_evolution < 2)
+                return _imageFirstEvolution;
+            else
+                return _imageSecondeEvolution;
+        }
+    }
+
     public string Name => _name;
 
     public RarityCard Rarity => _rarity;
@@ -70,9 +81,10 @@ public class Card : ScriptableObject, ICard, IRoulette
     public int Level => _level;
     public Vector2 DirectionView => _directionView;
     public ParticleSystem AttackEffect => _attackEffect;
-    public Image AttackIcon => _attackIcon;
+    public Sprite SkillIcon => _skillIcon;
 
-    public int BonusAttackSkill => _attackSkill;
+    public int BonusAttackSkill => (int)(_attack * 0.17f);
+    public int Id { get; set; }
     public void TakeDamage(int damage) => _health -= damage;
 
     public string AttackSkillName => _attackSillName;
@@ -84,32 +96,45 @@ public class Card : ScriptableObject, ICard, IRoulette
 
     public string Discription => _discription;
 
+    public Sprite ImageFirstEvolution => _imageFirstEvolution;
+    public Sprite ImageSecondeEvolution => _imageSecondeEvolution;
+    
     Card ICard.Card => this;
 
-    public void Evolve(EvolutionCard firstCard, EvolutionCard secondCard)
+    public void Init(int evolution, int level, int id, int attack, int defence, int health, int currentLevelPoint, int maxLevelPoint)
     {
-        if (firstCard.CardCell.UIIcon != secondCard.CardCell.UIIcon || _evolution == 2) throw new System.InvalidOperationException();
-
-        float valueIncreaseMultiplier = 1.35f;
-
-        int GetLevelUpValue(int firstValue, int secondValue)
-        {
-            return (int)((firstValue + secondValue) / 2 * valueIncreaseMultiplier);
-        }
-
-        _attack = GetLevelUpValue(firstCard.CardCell.Attack, secondCard.CardCell.Attack);
-        _def = GetLevelUpValue(firstCard.CardCell.Def, secondCard.CardCell.Def);
-        _health = GetLevelUpValue(firstCard.CardCell.Health, secondCard.CardCell.Health);
-
-        _currentImage = _imageSecondeEvolution;
-        _evolution++;
+        _evolution = evolution;
+        _level = level;
+        Id = id;
+        _attack = attack;
+        _def = defence;
+        _health = health;
+        _currentLevelPoint = currentLevelPoint;
+        _maxLevelPoint = maxLevelPoint;
     }
 
+    public CardData GetCardData()
+    {
+        var cardData = new CardData()
+        {
+            Evolution = _evolution,
+            Level = Level,
+            Attack = _attack,
+            Defence = Def,
+            Health = _health,
+            Id = Id,
+            LevelPoint = LevelPoint,
+            MaxLevelPoint = _maxLevelPoint
+        };
+
+        return cardData;
+    }
+    
     public void TakeItem()
     {
         var roulettePage = FindObjectOfType<RoulettePage>().gameObject.GetComponent<RoulettePage>();
 
-        roulettePage.AccrueCard(this);
+        roulettePage.AccrueCard(GetCardData());
     }
 
     public Sprite GetFrame(Sprite[] _frames)
@@ -127,5 +152,12 @@ public class Card : ScriptableObject, ICard, IRoulette
         }
 
         return null;
+    }
+
+    public void Repair()
+    {
+        _maxLevelPoint = 1000;
+        _currentLevelPoint = 0;
+        _level = 1;
     }
 }

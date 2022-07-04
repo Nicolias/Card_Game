@@ -11,35 +11,51 @@ public class StatisticWindow : MonoBehaviour
 
     [SerializeField] private CardCollection _cardCollection;
 
-    private CardCellInDeck _card;
+    [SerializeField] private Sprite _emptyCardSprite;
 
-    private void Awake()
-    {
-        gameObject.SetActive(false);
-    }
+    [SerializeField] private Button _resetButton;
+
+    private CardCellInDeck _card; 
 
     private void OnEnable()
     {
         _cardCollection.gameObject.SetActive(false);
+        ClearStatisticFields();
+        _resetButton.gameObject.SetActive(false);
+    }
+
+    private void ClearStatisticFields()
+    {
+        _icon.sprite = _emptyCardSprite;
+
+        _atk.text = "Atk: 0";
+        _def.text = "Def: 0";
+        _health.text = "HP: 0";
+        _race.text = "Race: ";
+        _rarity.text = "Rare: ";
+        _name.text = "Name: ";
     }
 
     public void Render(CardCellInDeck cardCell)
     {
-        _icon.sprite = cardCell.Card.UIIcon;
+        _icon.sprite = cardCell.Icon.sprite;
 
         _atk.text = "Atk: " + cardCell.Attack;
         _def.text = "Def: " + cardCell.Def;
+        _health.text = "HP: " + cardCell.Health.ToString();
         _race.text = cardCell.Card.Race.ToString();
         _rarity.text = cardCell.Card.Rarity.ToString();
         _name.text = cardCell.Card.Name;
-        _health.text = cardCell.Card.Health.ToString();
 
         _card = cardCell;
+
+        _resetButton.gameObject.SetActive(true);
     }
 
     public void ResetCard()
     {
         _card.ResetComponent();
-        gameObject.SetActive(false);
+        ClearStatisticFields();
+        _resetButton.gameObject.SetActive(false);
     }
 }

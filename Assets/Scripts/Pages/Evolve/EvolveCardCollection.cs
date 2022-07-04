@@ -6,14 +6,12 @@ using UnityEngine.UI;
 public class EvolveCardCollection : MonoBehaviour
 {
     [SerializeField] private Evolution _evolution;
-
-    private List<CardCollectionCell> _listCardsInCollection = new();
-
     [SerializeField] private EvolutionCardCell _cardCellTemplate;
     [SerializeField] private Transform _container;
-
     [SerializeField] private Button _doneButton;
-
+    [SerializeField] private SelectPanel _selectPanel;
+    
+    private List<CardCollectionCell> _listCardsInCollection = new();
     private CardCollectionCell _exampleCard;
     private CardCollectionCell _selectedCard;
 
@@ -41,19 +39,18 @@ public class EvolveCardCollection : MonoBehaviour
 
     private void RenderCard()
     {
-        foreach (Transform card in _container)
-        {
+        foreach (Transform card in _container) 
             Destroy(card.gameObject);
-        }
 
         _exampleCard = _evolution.FirstCard.CardCell == null ? _evolution.SecondeCard.CardCell : _evolution.FirstCard.CardCell;
-
+        
         for (int i = 0; i < _listCardsInCollection.Count; i++)
         {
-            if (CheckCardSimilarityWhithExample(_listCardsInCollection[i].Card) && _listCardsInCollection[i].Card.Evoulution == 1)
+            if (CheckCardSimilarityWhithExample(_listCardsInCollection[i].Card) && _listCardsInCollection[i].Card.Evolution == 1)
             {
                 var cell = Instantiate(_cardCellTemplate, _container);
-                cell.Render(_listCardsInCollection[i].Card);
+                cell.Init(this, _selectPanel);
+                cell.Render(_listCardsInCollection[i].CardData);
                 cell.SetLinkOnCardInCollection(_listCardsInCollection[i]);
             }
         }
@@ -86,7 +83,8 @@ public class EvolveCardCollection : MonoBehaviour
 
     public void SelectCard(CardCollectionCell selectCard)
     {
-        if (selectCard == null) throw new System.ArgumentNullException();
+        if (selectCard == null) 
+            throw new System.ArgumentNullException();
 
         _selectedCard = selectCard;
     }

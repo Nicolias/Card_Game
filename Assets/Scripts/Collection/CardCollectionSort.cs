@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
-public class CardCollectionSort : MonoBehaviour
+public class CardCollectionSort<T> : MonoBehaviour where T : CardCell
 {
-    protected List<CardCollectionCell> _cards = new();
+    protected List<T> _cards = new();
 
     public void AttackSort()
     {
@@ -33,7 +33,16 @@ public class CardCollectionSort : MonoBehaviour
     public void DemonsSort()
     {
         RaceSort(RaceCard.Demons);
+    }
 
+    public void StandartRarity()
+    {
+        RaritySort(RarityCard.Standart);
+    }
+
+    public void RareRarity()
+    {
+        RaritySort(RarityCard.Rarity);
     }
 
     private void RaceSort(RaceCard race)
@@ -42,6 +51,16 @@ public class CardCollectionSort : MonoBehaviour
         {
             cardCell.gameObject.SetActive(false);
             if (cardCell.Card.Race == race)
+                cardCell.gameObject.SetActive(true);
+        }
+    }
+
+    private void RaritySort(RarityCard rarity)
+    {
+        foreach (var cardCell in _cards)
+        {
+            cardCell.gameObject.SetActive(false);
+            if (cardCell.Card.Rarity == rarity)
                 cardCell.gameObject.SetActive(true);
         }
     }

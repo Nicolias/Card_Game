@@ -25,10 +25,10 @@ namespace Pages.My_Page
         [SerializeField] private Image _avatar;
 
         [SerializeField]
-        private Slider _energySlider;
+        private SliderAnimator _energySlider;
     
         [SerializeField]
-        private Slider _xpSlider;
+        private SliderAnimator _xpSlider;
 
         private DataSaveLoadService _data;
         
@@ -36,35 +36,40 @@ namespace Pages.My_Page
         private void Construct(DataSaveLoadService data)
         {
             _data = data;
-        }
-        
-        private void Start()
+        }        
+
+        private void OnEnable()
         {
-            UpdateDisplay();
-            
-            //_avatar.sprite = _data.PlayerData.Avatar;
+            UpdateDisplay();            
         }
 
         public void UpdateDisplay()
         {
-            UpdateSlider(_energySlider, _data.PlayerData.Energy);
-            UpdateSlider(_xpSlider, _data.PlayerData.XP);
+            _energySlider.UpdateSlider(_data.PlayerData.Energy);
+            _xpSlider.UpdateSlider(_data.PlayerData.XP);
             
+            _avatar.sprite = _data.PlayerData.Avatar;
             _nickName.text = _data.PlayerData.Nickname;
             _levelText.text = _data.PlayerData.Level.ToString();
             _rankText.text = _data.PlayerData.Rank.ToString();
             _energyText.text = _data.PlayerData.Energy.ToString(CultureInfo.InvariantCulture);
             _xpText.text = _player.Exp.ToString(CultureInfo.InvariantCulture);
-            _xpSlider.value = _player.Exp;
-            _heroesText.text = 5.ToString() + '/' + 25;
+            _heroesText.text = (CalculateHerouseCountInDeck(_data.PlayerData.AttackDecks) + CalculateHerouseCountInDeck(_data.PlayerData.DefDecks) + _data.PlayerData.InventoryDecks.Length).ToString() + '/' + 100;
             _powerText.text = 90.ToString();
             _goldText.text = _data.PlayerData.Coins.ToString();
         }
 
-        private void UpdateSlider(Slider slider, float value)
+        private int CalculateHerouseCountInDeck(Card[] deck)
         {
-            slider.value = 0;
-            DOTween.To(()=> slider.value, x=> slider.value = x, value, 1); 
+            int herouseCount = 0;
+
+            foreach (var cardInDeck in deck)
+            {
+                if (cardInDeck.Rarity != RarityCard.Empty)
+                    herouseCount++;
+            }
+
+            return herouseCount;
         }
     }
 }
