@@ -52,6 +52,7 @@ public class BattleController : MonoBehaviour
     private Card[] _enemyCards;
     private Card[] _playerCards;
     private int previousRandomNumber = -1;
+    private DataSaveLoadService _dataSaveLoadService;
     
     public event UnityAction OnPlayerWin;
     public event UnityAction OnPlayerLose;
@@ -59,7 +60,7 @@ public class BattleController : MonoBehaviour
     [Inject]
     private void Construct(DataSaveLoadService dataSaveLoadService)
     {
-        _playerCards = dataSaveLoadService.PlayerData.AttackDecks;
+        _dataSaveLoadService = dataSaveLoadService;
     }
         
     private void Awake()
@@ -70,6 +71,8 @@ public class BattleController : MonoBehaviour
     private void OnEnable()
     {
         RenderEnemyDefCard();
+        
+        _playerCards = _dataSaveLoadService.PlayerData.AttackDecks;
     }
 
     public void SetEnemyDefCard(List<Card> enemyDefCards, int amountEnemyDefValue)
@@ -176,7 +179,7 @@ public class BattleController : MonoBehaviour
                     yield return new WaitForSeconds(0.5f);
                 }
 
-                var randomNumber = Random.Range(0, myAliveCardNumbers.Count);
+                var randomNumber = myAliveCardNumbers[Random.Range(0, myAliveCardNumbers.Count)];
                 previousRandomNumber = randomNumber;
                 Card randomMyCard = myCards[randomNumber];
 
@@ -201,9 +204,8 @@ public class BattleController : MonoBehaviour
                 {
                     for (int k = 0; k < randomOpponentCardDamageCount; k++)
                     {
-                        var randomOpponentCardNumber = Random.Range(0, opponentAliveCardNumbers.Count);
+                        var randomOpponentCardNumber = opponentAliveCardNumbers[Random.Range(0, opponentAliveCardNumbers.Count)];
                         Card randomEnemyCard = opponentCards[randomOpponentCardNumber];
-
                         CardAnimator opponentCardAnimator = opponentCardAnimators[randomOpponentCardNumber];
 
                         var myAnimatorPosition = myCardAnimator.transform.position;
@@ -291,18 +293,18 @@ public class BattleController : MonoBehaviour
             
         for (int i = 0; i < cards.Length; i++)
         {
-            if (cards[i].Name != "Empty")
+            if (cards[i].Id != 0) 
                 aliveCards.Add(i);
         }
 
         return aliveCards;
     }
-
+    
     private void HideNonActiveCards(Card[] cards, CardAnimator[] cardAnimators)
     {
         for (int i = 0; i < cards.Length; i++)
         {
-            if (cards[i].Name == "Empty")
+            if (cards[i].Id == 0)
                 cardAnimators[i].Hide();
         }
     }

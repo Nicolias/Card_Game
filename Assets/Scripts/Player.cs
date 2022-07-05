@@ -12,15 +12,13 @@ public class Player : MonoBehaviour
     public event UnityAction<int> OnEnergyChange;
 
     [SerializeField] private Inventory _inventory;
-
     [SerializeField] private AttackDeck _attackDeck;
-
-    [SerializeField] private int _maxHealth;
-    private int _health;
-
+    [SerializeField] private int _maxHealth = 100;
+    
+    private int _health = 100;
     private int _level = 1;
     private int _energy = 25;
-    private int _exp;
+    private int _exp = 0;
 
     private int _amountCardBaseAttack;
     private int _amountCardBaseDef;
@@ -49,12 +47,6 @@ public class Player : MonoBehaviour
 
             foreach (var item in cardInDeck)
                 _amountCardBaseAttack += item.Attack;
-        };
-
-        _inventory.OnReestablishEnergy += () =>
-        {
-            _energy = 25;
-            OnEnergyChange?.Invoke(_energy);
         };
     }
 

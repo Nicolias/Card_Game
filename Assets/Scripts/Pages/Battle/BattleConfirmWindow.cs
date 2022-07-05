@@ -8,9 +8,7 @@ using Zenject;
 public class BattleConfirmWindow : MonoBehaviour
 {
     [SerializeField] private BattleController _battle;
-
     [SerializeField] private Player _player;
-
     [SerializeField] private GameObject _exeptionBaner;
     [SerializeField] private TMP_Text _exeptionText;
 
@@ -41,8 +39,7 @@ public class BattleConfirmWindow : MonoBehaviour
     {
         _enemyDefCards = enemyDefCards;
         _amountEnemyDefValue = amountEnemyDefValue;
-        _sequence = DOTween.Sequence();
-        
+
         gameObject.SetActive(true);
         ShowSmooth();
     }
@@ -79,29 +76,33 @@ public class BattleConfirmWindow : MonoBehaviour
                 _dataSaveLoadService.IncreaseEnergy(25);
             }
         }
-
-        _sequence.Kill();
+        
         gameObject.SetActive(false);
     }
 
     public void HideSmooth()
     {
+        _sequence?.Kill();
+        _sequence = DOTween.Sequence();
+        
         _sequence
             .Insert(0, DOTween.To(() => _canvasGroup.alpha, x => _canvasGroup.alpha = x, 0, 0.3f))
             .Insert(0, transform.DOLocalMove(_startPosition + new Vector3(0, -120, 0), 0.3f))
-            .OnComplete(() =>
-            {
-                _sequence.Kill();
-                gameObject.SetActive(false);
-            });
+            .OnComplete(() => gameObject.SetActive(false));
     }
     
     private void ShowSmooth()
     {
+        _sequence?.Kill();
+        _sequence = DOTween.Sequence();
+        
         _canvasGroup.alpha = 0;
         transform.localPosition = _startPosition + new Vector3(0, 120, 0);
         _sequence
             .Insert(0, DOTween.To(() => _canvasGroup.alpha, x => _canvasGroup.alpha = x, 1, 0.6f))
             .Insert(0, transform.DOLocalMove(_startPosition, 0.5f));
     }
+    
+    private void OnApplicationQuit() => 
+        _sequence?.Kill();
 }
