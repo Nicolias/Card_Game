@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -12,6 +13,8 @@ public class DailyRewards : MonoBehaviour
     [SerializeField] Transform _rewardsGrid;
 
     [SerializeField] private List<Reward> _rewards = new();
+
+    [SerializeField] private TMP_Text _status;
 
     private int _currentStreak
     {
@@ -41,8 +44,8 @@ public class DailyRewards : MonoBehaviour
 
     private bool _canClaimReward;
     private int _maxStreakCount;
-    private float _claimCoolDown = 24f / 24 / 60 / 6 / 2;
-    private float _claimDeadLine = 48f / 24 / 60 / 6 / 2;
+    private float _claimCoolDown = 24f / 24 / 60 / 6;
+    private float _claimDeadLine = 48f / 24 / 60 / 6;
 
     private List<RewardPref> _rewardPrefabs = new();
 
@@ -75,8 +78,8 @@ public class DailyRewards : MonoBehaviour
     {
         while (true)
         {
-            UpdateRewardsState();
             yield return new WaitForSeconds(1);
+            UpdateRewardsState();
         }
     }
 
@@ -93,8 +96,11 @@ public class DailyRewards : MonoBehaviour
                 _lastClaimTime = null;
                 _currentStreak = 0;
             }
-            else if (timeSpan.TotalHours < _claimCoolDown)
-                _canClaimReward = false;
+            else
+            {
+                if (timeSpan.TotalHours < _claimCoolDown)
+                    _canClaimReward = false;
+            }
         }
 
         UpdateRewardsUI();   
@@ -109,11 +115,15 @@ public class DailyRewards : MonoBehaviour
             var nextClaimTime = _lastClaimTime.Value.AddHours(_claimCoolDown);
             var currentClaimCooldown = nextClaimTime - DateTime.UtcNow;
 
-            Debug.Log($"Left {currentClaimCooldown.Hours} {currentClaimCooldown.Minutes} {currentClaimCooldown.Seconds}");
+            _status.text = $"Left {currentClaimCooldown.Hours}:{currentClaimCooldown.Minutes}:{currentClaimCooldown.Seconds}";
+        }
+        else
+        {
+            _status.text = "Claim your rewards";
         }
 
         for (int i = 0; i < _rewardPrefabs.Count; i++)
-            _rewardPrefabs[i].SetRewardData(i, _currentStreak, _rewards[i]);
+            _rewardPrefabs[i].SetRewardData(i, _currentStreak, _rewards[i], _canClaimReward);
     }
 
     public void ClaimReward()
@@ -133,6 +143,9 @@ public class DailyRewards : MonoBehaviour
         }
 
         _lastClaimTime = DateTime.UtcNow;
-        _currentStreak = (_currentStreak + 1) % _maxStreakCount;
+        _currentStreak += 1;
+
+        if (_currentStreak >= _maxStreakCount)
+            _currentStreak = _maxStreakCount - 1;
     }
 }

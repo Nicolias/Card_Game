@@ -7,37 +7,36 @@ using Zenject;
 
 public class Inventory : MonoBehaviour
 {
-    private DataSaveLoadService _data;
+    private DataSaveLoadService _dataSaveLoadService;
 
-    public List<ShopItemBottle> BottleCollection = new();
+    public List<ShopItemBottle> BottleCollection => _dataSaveLoadService.PlayerData.Items;
 
     [Inject]
-    private void Construct(DataSaveLoadService data)
+    private void Construct(DataSaveLoadService dataSaveLoadService)
     {
-        _data = data;
-    }
-    private void DestroyItem(InventoryCell item)
-    {
-        if (item.AmountThisItem > 0)
-        {
-            item.AmountThisItem--;
-        }
-        else
-        {
-            BottleCollection.Remove(item.Item);
-            Destroy(item.gameObject);
-        }
+        _dataSaveLoadService = dataSaveLoadService;
     }
 
     public void AddItem(ShopItemBottle bottle)
     {
         BottleCollection.Add(bottle);
+        _dataSaveLoadService.UpdateItemsData();
     }
-
 
     public void UseEnergyBottle(InventoryCell item)
     {
-        _data.IncreaseEnergy(25 - _data.PlayerData.Energy);
+        _dataSaveLoadService.IncreaseEnergy(_dataSaveLoadService.PlayerData.MaxEnergy);
         DestroyItem(item);
+    }
+
+    private void DestroyItem(InventoryCell bottel)
+    {
+        if (bottel.AmountThisItem > 0)
+            bottel.AmountThisItem--;
+        else
+            Destroy(bottel.gameObject);
+
+        BottleCollection.Remove(bottel.Item);
+        _dataSaveLoadService.UpdateItemsData();
     }
 }

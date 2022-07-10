@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace Data
@@ -20,10 +21,13 @@ namespace Data
         public float EXP;
         public float MaxExp;
         public int Energy;
+        public int MaxEnergy;
         public int Level;
         public int Rank;
         public DateTime FirstDayInGame;
         public DateTime FirstDayInGame1;
         public Species Species;
+        public int[] ItemsId;
+        public List<ShopItemBottle> Items;
     }
 }

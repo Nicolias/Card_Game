@@ -56,6 +56,7 @@ MonoBehaviour:
   _backGround: {fileID: 7257315289048032868}
   _defaultColor: {r: 1, g: 1, b: 1, a: 1}
   _currentStreakColor: {r: 0.33276975, g: 1, b: 0.25, a: 1}
+  _takenColor: {r: 0.4, g: 0.4, b: 0.4, a: 1}
   _dayText: {fileID: 4820275451802409790}
   _rewardValue: {fileID: 2582565137933070655}
   _rewardIcon: {fileID: 1536699882216706376}
