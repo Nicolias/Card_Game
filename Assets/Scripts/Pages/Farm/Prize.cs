@@ -1,6 +1,5 @@
 using System.Collections;
 using System.Collections.Generic;
-using Roulette;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -19,6 +18,7 @@ public class Prize : ScriptableObject, IRoulette
     public PrizeType TypePrize;
 
     public Sprite UIIcon => Sprite;
+    public string Description => TypePrize.ToString();
 
     public void TakeItem()
     {

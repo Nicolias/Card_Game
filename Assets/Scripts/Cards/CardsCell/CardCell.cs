@@ -23,6 +23,8 @@ public abstract class CardCell : MonoBehaviour, ICard
     public int Def => _cardData.Defence;
     public int Health => _cardData.Health;
 
+    public int Power => Attack + Health;
+
     public int Level => _cardData.Level;
     public int Evolution => _cardData.Evolution;
     public int MaxLevel => _maxLevel;
@@ -37,16 +39,6 @@ public abstract class CardCell : MonoBehaviour, ICard
 
     public virtual Card Card => _card;
     public virtual CardData CardData => _cardData;
-
-    public int TryUseSkill()
-    {
-        Debug.Log(Mathf.RoundToInt(100 / Card.SkillChance).ToString());
-
-        if (Random.Range(1, Mathf.RoundToInt(100 / Card.SkillChance)) == 1)
-            return BonusAttackSkill;
-
-        return 0;
-    }
 
     public virtual void Render(CardData cardData)
     {

@@ -12,37 +12,23 @@ namespace Infrastructure.Services
         private const string DataKey = "data";
         private const int EmptyCardId = 0;
         private const int SizeDeck = 5;
-        
-        protected Sprite[] _avatars;
-        protected Card[] _allCards;
 
-        private PlayerData _playerData;
-        public PlayerData PlayerData => _playerData;
+        private readonly Sprite[] _avatars;
+        private readonly Card[] _allCards;
 
-        public DataSaveLoadService(Card[] allCards, Sprite[] avatars)
-        {
-            _allCards = allCards;
-            
-            //foreach (var card in _allCards) 
-                //card.Repair();
-
-            _avatars = avatars;
-        }
+        private Data.PlayerData _playerData;
+        public Data.PlayerData PlayerData => _playerData;
 
         public void Save()
         {
             string jsonString = JsonUtility.ToJson(_playerData);
             PlayerPrefs.SetString(DataKey, jsonString);
-
-            Debug.Log("Save");
         }
 
         public void Load()
         {
-            for (int i = 0; i < _allCards.Length; i++)
-            {
+            for (int i = 0; i < _allCards.Length; i++) 
                 _allCards[i].Id = i;
-            }
 
             if (!PlayerPrefs.HasKey(DataKey))
                 CreatePlayerData();
@@ -55,7 +41,7 @@ namespace Infrastructure.Services
             try
             {
                 Debug.Log(jsonString);
-                _playerData = JsonUtility.FromJson<PlayerData>(jsonString);
+                _playerData = JsonUtility.FromJson<Data.PlayerData>(jsonString);
             }
             catch (Exception e)
             {
@@ -69,14 +55,9 @@ namespace Infrastructure.Services
             UpdateDefenceDeck();
             UpdateInventoryDeck();
             UpdateAvatar();
-
-            //Debug.Log(_playerData);
-            
-            Debug.Log("Load");
-            //Debug.Log($"{_playerData.Coins}, \n{_playerData.Crystals}, \n{_playerData.AttackDecks}");
         }
         
-                public void IncreaseEnergy(int energyValue)
+        public void IncreaseEnergy(int energyValue)
         {
             if (_playerData.Energy > 25) throw new ArgumentOutOfRangeException();
 
@@ -90,6 +71,20 @@ namespace Infrastructure.Services
 
             _playerData.Energy -= energyValue;
             Save();
+        }
+
+        public void IncreaseEXP(int amountExp)
+        {
+            if (amountExp <= 0) throw new ArgumentOutOfRangeException();
+
+            _playerData.EXP += amountExp;
+            
+            if (_playerData.EXP >= _playerData.MaxExp)
+            {
+                _playerData.Level++;
+                _playerData.EXP = 0;
+                _playerData.MaxExp = PlayerData.Level * 100;
+            }
         }
 
         public void SetCoinCount(int count)
@@ -123,6 +118,15 @@ namespace Infrastructure.Services
         public void SetAttackDecks(CardData[] cards) => 
             SetDecks(cards, ref _playerData.AttackDecksData, ref _playerData.AttackDecks);
 
+        public void SetSpecies(Species species) => 
+            _playerData.Species = species;
+
+        public DataSaveLoadService(Card[] allCards, Sprite[] avatars)
+        {
+            _allCards = allCards;
+            _avatars = avatars;
+        }
+
         private void SetDecks(CardData[] cards, ref CardData[] deckData, ref Card[] deck)
         {
             deck = new Card[cards.Length];
@@ -151,20 +155,22 @@ namespace Infrastructure.Services
         
         private void CreatePlayerData()
         {
-            _playerData = new PlayerData
+            _playerData = new Data.PlayerData
             {
                 Coins = 1000,
                 Crystals = 1000,
-                AttackDecksData = CreateCardDatas(),
-                DefDecksData = CreateCardDatas(),
-                InventoryDecksData = new CardData[0],
-                InventoryDecks = new Card[0],
+                AttackDecksData = CreateCardsData(),
+                DefDecksData = CreateCardsData(),
+                InventoryDecksData = Array.Empty<CardData>(),
+                InventoryDecks = Array.Empty<Card>(),
                 Nickname = RandomNickname(),
                 AvatarId = RandomAvatarId(),
                 FirstDayInGame = DateTime.Now,
                 Rank = 1,
                 Level = 1,
-                Energy = 25
+                Energy = 25,
+                EXP = 0,
+                MaxExp = 100
             };
 
             Save();
@@ -222,7 +228,7 @@ namespace Infrastructure.Services
             }
         }
 
-        private CardData[] CreateCardDatas()
+        private CardData[] CreateCardsData()
         {
             var cards = new CardData[5];
             

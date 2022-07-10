@@ -7,51 +7,37 @@ namespace Pages.Quest
 {
     public class QuestConfirmWindow : MonoBehaviour
     {
-        [SerializeField] private Player _player;
         [SerializeField] private int _requiredAmountEnergy;
-        [SerializeField] private GameObject _questList, _quest, _exeptionBaner;
+        [SerializeField] private GameObject _questList, _exeptionBaner;
         [SerializeField] private TMP_Text _exeptionBanerText;
+        [SerializeField] private QuestFight _questFight;
 
         private DataSaveLoadService _dataSaveLoadService;
-    
+        private LocalDataService _localDataService;
+        
         public int RequiredAmountEnergy => _requiredAmountEnergy;
 
         [Inject]
-        private void Construct(DataSaveLoadService dataSaveLoadService)
+        private void Construct(DataSaveLoadService dataSaveLoadService, LocalDataService localDataService)
         {
             _dataSaveLoadService = dataSaveLoadService;
+            _localDataService = localDataService;
         }
     
-        public void StartQuest()
+        public void StartQuest(Chapter chapter)
         {
-            if (!CheckForPlayerAlive() || !CheckForDeckEmpty() || !CheckForEnergy())
+            if (_requiredAmountEnergy > _dataSaveLoadService.PlayerData.Energy)
+            {
+                OpenExceptionBanner("Not enough energy");
                 return;
-            
-            _quest.SetActive(true);
+            }
+
+            if (CheckForDeckEmpty() == false)
+                return;
+
+            _questFight.StartFight(chapter);
             _questList.SetActive(false);
             gameObject.SetActive(false);
-        }
-
-        private bool CheckForEnergy()
-        {
-            print(_player.Energy);
-        
-            if (_requiredAmountEnergy <= _player.Energy)
-                return true;
-
-            OpenExceptionBanner("Not enough energy");
-            return false;
-        }
-
-        private bool CheckForPlayerAlive()
-        {
-            print(_player.Health);
-        
-            if (_player.Health > 0)
-                return true;
-        
-            OpenExceptionBanner("Not enough health");
-            return false;
         }
 
         private bool CheckForDeckEmpty()

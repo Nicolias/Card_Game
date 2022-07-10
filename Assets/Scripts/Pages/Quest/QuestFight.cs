@@ -1,110 +1,141 @@
 using System.Collections;
-using System.Collections.Generic;
-using Pages.Quest;
+using Infrastructure.Services;
 using TMPro;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
+using Zenject;
 
-public class QuestFight : MonoBehaviour
+namespace Pages.Quest
 {
-    public event UnityAction OnPlayerWin;
-    public event UnityAction OnPlayerLose;
-
-    [SerializeField] private Slider _enemyHealthSlider, _playerHealthSlider, _playerExpSlider;
-    [SerializeField] private Player _player;
-    [SerializeField] private Enemy _enemy;
-    [SerializeField] private TMP_Text _enemyHelthPerProcentText, _playerHealthPerProcentText, _playerExpPerProcentText;
-    [SerializeField] private QuestConfirmWindow _questConfirmWindow;
-    [SerializeField] private GameObject _questList;
-
-    private bool _isFight;
-
-    private void Start()
+    public class QuestFight : MonoBehaviour
     {
-        _playerHealthSlider.maxValue = _player.MaxHealth;        
-        _enemyHealthSlider.maxValue = _enemy.MaxHealth;
-    }
+        public event UnityAction OnPlayerWin;
+        public event UnityAction OnPlayerLose;
 
-    private void OnEnable()
-    {
-        _playerExpSlider.maxValue = _player.MaxExp;
-        _playerExpSlider.value = _player.Exp;
+        [SerializeField] private Slider _enemyHealthSlider, _playerHealthSlider, _playerExpSlider;
+        [SerializeField] private TMP_Text _enemyHelthPerProcentText, _playerHealthPerProcentText, _playerExpPerProcentText;
+        [SerializeField] private QuestConfirmWindow _questConfirmWindow;
+        [SerializeField] private GameObject _questList;
+        [SerializeField] private QuestPrizeWindow _winOrLoseWindow;
+        [SerializeField] private Image _playerIcon;
 
-        _playerHealthSlider.value = _player.Health;
-        _playerHealthPerProcentText.text = (_player.Health / _player.MaxHealth * 100).ToString() + " %"; ;
+        [SerializeField]
+        private SliderAnimator _experienceSliderAnimator;
+        
+        [SerializeField] 
+        private Shaking _shaking;
 
-        _enemyHealthSlider.value = _enemy.MaxHealth;
-        _enemyHelthPerProcentText.text = "100 %";
+        [SerializeField]
+        private ParticleSystem _attackEffect;
+        
+        private LocalDataService _localDataService;
+        private DataSaveLoadService _dataSaveLoadService;
+        private AssetProviderService _assetProviderService;
+        private bool _isFight;
 
-        _playerExpPerProcentText.text = (_player.Exp / _player.MaxExp * 100).ToString() + " %";
+        private Enemy _enemy;
+        private Chapter _chapter;
 
-        StartCoroutine(StartFight());
-    }
-
-    private IEnumerator StartFight()
-    {
-        _player.SpendEnergy(_questConfirmWindow.RequiredAmountEnergy);
-        _isFight = true;
-
-        yield return new WaitForSeconds(0.5f);
-
-        while (_isFight)
+        [Inject]
+        private void Construct(DataSaveLoadService dataSaveLoadService, AssetProviderService assetProviderService, LocalDataService localDataService)
         {
-            HitEnemy();
+            _dataSaveLoadService = dataSaveLoadService;
+            _assetProviderService = assetProviderService;
+            _localDataService = localDataService;
+        }
+        
+        private void OnEnable()
+        {
+            _playerHealthSlider.maxValue = _localDataService.MaxHealth;        
+            _enemyHealthSlider.maxValue = _enemy.MaxHealth;
+        }
 
-            yield return new WaitForSeconds(1);
+        public void StartFight(Chapter chapter)
+        {
+            _chapter = chapter;
+            _enemy = chapter.Enemy;
 
-            if (_enemy.Health <= 0)
-                _isFight = false;
-            else
-                HitPlayer();
+            gameObject.SetActive(true);
+            InitFight();
+            StartCoroutine(Fight());
+        }
+
+        private void InitFight()
+        {
+            _playerIcon.sprite = _dataSaveLoadService.PlayerData.Avatar;
+
+            _playerExpSlider.maxValue = _dataSaveLoadService.PlayerData.MaxExp;
+            _playerExpSlider.value = _dataSaveLoadService.PlayerData.EXP;
+            _playerExpPerProcentText.text = (_dataSaveLoadService.PlayerData.EXP / _dataSaveLoadService.PlayerData.MaxExp * 100).ToString() + " %";
+
+            _playerHealthSlider.value = _localDataService.Health;
+            _playerHealthPerProcentText.text = (_localDataService.Health / _localDataService.MaxHealth * 100).ToString() + " %"; ;
+
+            _enemyHealthSlider.value = _enemy.MaxHealth;
+            _enemyHelthPerProcentText.text = "100 %";
+                    
+            _dataSaveLoadService.DecreaseEnergy(_questConfirmWindow.RequiredAmountEnergy);
+        }
+        
+        private IEnumerator Fight()
+        {
+            _isFight = true;
 
             yield return new WaitForSeconds(0.5f);
+
+            while (_isFight)
+            {
+                HitEnemy();
+
+                yield return new WaitForSeconds(1);
+
+                if (_enemy.Health <= 0)
+                    _isFight = false;
+                else
+                    HitPlayer();
+
+                yield return new WaitForSeconds(0.5f);
+            }
+
+            if (_localDataService.Health > 0)
+            {
+                _dataSaveLoadService.IncreaseEXP(25);
+
+                _playerExpPerProcentText.text = (_dataSaveLoadService.PlayerData.EXP / _dataSaveLoadService.PlayerData.MaxExp * 100).ToString() + " %";
+                _experienceSliderAnimator.UpdateSlider(_dataSaveLoadService.PlayerData.EXP, _dataSaveLoadService.PlayerData.MaxExp);
+                yield return new WaitForSeconds(2f);
+
+                _winOrLoseWindow.OpenPrizeWindow();
+                _chapter.NextChapter.UnlockedChapter();
+            }
+
+            gameObject.SetActive(false);
+            _questList.SetActive(true);
+            _localDataService.RevertHealth();
         }
 
-        gameObject.SetActive(false);
-        _questList.SetActive(true);
-
-        if (_player.Health > 0)
+        private void HitEnemy()
         {
-            OnPlayerWin?.Invoke();
-            _player.GetExp(25);
-            _playerExpPerProcentText.text = (_player.Exp / _player.MaxExp * 100).ToString() + " %";
+            _enemy.TakeDamage(_localDataService.Attack); //1
+            var effect = Instantiate(_attackEffect, _enemy.transform.position, Quaternion.identity);
+            _shaking.Shake(0.5f, 10);
+            Destroy(effect, 4);
+            _enemyHealthSlider.value = _enemy.Health;
+            _enemyHelthPerProcentText.text = (_enemy.Health / _enemy.MaxHealth * 100).ToString() + " %";
         }
-
-        _player.RevertHealth();
-    }
-
-    private int GenerateEnemyAttackValue(EnemyType enemyType)
-    {
-        if (enemyType == EnemyType.Enemy)
-            return Random.Range(1, 5);
-
-        if (enemyType == EnemyType.Boss)
-            return Random.Range(15, 25);
-
-        throw new System.ArgumentException();
-    }  
-
-    private void HitPlayer()
-    {
-        _player.TakeDamage(GenerateEnemyAttackValue(_enemy.TypeEnemy));
-
-        _playerHealthSlider.value = _player.Health;
-        _playerHealthPerProcentText.text = (_player.Health / _player.MaxHealth * 100).ToString() + " %";
-
-        if (_player.Health <= 0)
+                
+        private void HitPlayer()
         {
-            _isFight = false;
-            OnPlayerLose?.Invoke();
-        }
-    }
+            _localDataService.TakeDamage(_enemy.Damage());
+            _shaking.Shake(0.5f, 10);
+            _playerHealthSlider.value = _localDataService.Health;
+            _playerHealthPerProcentText.text = (_localDataService.Health / _localDataService.MaxHealth * 100).ToString() + " %";
 
-    private void HitEnemy()
-    {
-        _enemy.TakeDamage(1); //_player.Attack
-        _enemyHealthSlider.value = _enemy.Health;
-        _enemyHelthPerProcentText.text = (_enemy.Health / _enemy.MaxHealth * 100).ToString() + " %";
+            if (_localDataService.Health <= 0)
+            {
+                _isFight = false;
+            }
+        }
     }
 }

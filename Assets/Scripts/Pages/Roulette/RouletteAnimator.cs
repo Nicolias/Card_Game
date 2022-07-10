@@ -1,9 +1,11 @@
 ﻿using System.Collections;
 using DG.Tweening;
+using TMPro;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace Roulette
+namespace Pages.Roulette
 {
     public class RouletteAnimator : MonoBehaviour
     {
@@ -18,11 +20,16 @@ namespace Roulette
 
         [SerializeField] 
         private GameObject _protectionFromExitingMenu;
+
+        [SerializeField] 
+        private Image _prizeImage;
+        
+        [SerializeField] 
+        private TextMeshProUGUI _prizeText;
         
         private Transform _currentParrent;
         private Vector3 _previousCurrentCellPosition;
         private Vector3 _previousCurrentCellScale;
-
         private RouletteCell _currentCell;
 
         public IEnumerator Spine(int prize, RouletteCell[] rouletteCells)
@@ -57,17 +64,15 @@ namespace Roulette
                 yield return new WaitForSeconds(rotationSpeed);
             }
 
-
-            
-            _currentParrent = _currentCell.transform.parent;
-
-            _previousCurrentCellPosition = _currentCell.transform.localPosition;
-            _previousCurrentCellScale = _currentCell.transform.localScale;
-            _currentCell.transform.parent = _target;
-            _currentCell.transform.DOMove(_target.position, 1);
-            yield return new WaitForSeconds(1);
-            _currentCell.transform.DOScale(new Vector3(30, 30, 1), 1);
-            yield return new WaitForSeconds(1);
+            _prizeImage.color = Color.white;
+            _prizeImage.sprite = _currentCell.RouletteItem.UIIcon;
+            _prizeText.text = _currentCell.RouletteItem.Description;
+            var prizeView = _prizeImage.transform;
+            _currentParrent = prizeView.transform.parent;
+            _previousCurrentCellScale = prizeView.localScale;
+            prizeView.localScale = Vector3.zero;
+            prizeView.DOScale(_previousCurrentCellScale, 0.5f);
+            //yield return new WaitForSeconds(0.5f);
             DOTween.To(() => _winningPanel.alpha, x => _winningPanel.alpha = x, 1, 1);
             yield return new WaitForSeconds(1);
             _winningPanel.interactable = true;
@@ -76,7 +81,8 @@ namespace Roulette
 
         public IEnumerator CloseWinningPanel(Button startRoletteButton)
         {
-            _currentCell.transform.parent = _currentParrent;
+            //yield return new WaitForSeconds(0.5f);
+            //_currentCell.transform.parent = _currentParrent;
             DOTween.To(() => _winningPanel.alpha, x => _winningPanel.alpha = x, 0, 0.75f)
                 .OnComplete(() =>
                 {
@@ -84,12 +90,13 @@ namespace Roulette
                     _winningPanel.interactable = false;
                 });
 
-            _currentCell.transform.DOScale(_previousCurrentCellScale, 0.75f);
+            //_currentCell.transform.DOScale(_previousCurrentCellScale, 0.75f);
             _currentCell.Unselect();
             yield return new WaitForSeconds(0.75f);
-            _currentCell.transform.DOLocalMove(_previousCurrentCellPosition, 0.75f);
+            //_currentCell.transform.DOLocalMove(_previousCurrentCellPosition, 0.75f);
             yield return new WaitForSeconds(0.75f);
             startRoletteButton.interactable = true;
+            _prizeImage.color = Color.clear;
             _protectionFromExitingMenu.SetActive(false);
         }        
     }

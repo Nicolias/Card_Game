@@ -17,11 +17,13 @@ namespace Data
         public string Nickname;
         public Sprite Avatar;
         public int AvatarId;
-        public float XP;
+        public float EXP;
+        public float MaxExp;
         public int Energy;
         public int Level;
         public int Rank;
         public DateTime FirstDayInGame;
         public DateTime FirstDayInGame1;
+        public Species Species;
     }
 }
