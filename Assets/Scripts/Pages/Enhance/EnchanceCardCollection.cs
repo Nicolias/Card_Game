@@ -1,6 +1,8 @@
 using System.Collections.Generic;
+using Infrastructure.Services;
 using UnityEngine;
 using UnityEngine.UI;
+using Zenject;
 
 namespace Pages.Enhance
 {
@@ -17,10 +19,20 @@ namespace Pages.Enhance
 
         [SerializeField] private Button _doneButton;
 
+        [SerializeField] 
+        private SelectPanel _selectPanel;
+        
         private CardCollectionCell _selectedCard;
+        private AssetProviderService _assetProviderService;
 
         [HideInInspector] public EnchanceUpgradeCard UpgradeCard;
 
+        [Inject]
+        private void Construct(AssetProviderService assetProviderService)
+        {
+            _assetProviderService = assetProviderService;
+        }
+        
         private void OnEnable()
         {
             _doneButton.onClick.AddListener(DoneChange);
@@ -33,12 +45,19 @@ namespace Pages.Enhance
             _doneButton.onClick.RemoveListener(DoneChange);
         }
 
-        public void SetCardCollection(List<CardCollectionCell> cardCollectionCells)
+        public void InitCardCollection(List<CardCollectionCell> cardCollectionCells)
         {
             if (cardCollectionCells == null) throw new System.InvalidOperationException();
 
             _listCardsInCollection.Clear();
             _listCardsInCollection.AddRange(cardCollectionCells);
+        }
+
+        public void SelectCard(CardCollectionCell selectCard)
+        {
+            if (selectCard == null) throw new System.ArgumentNullException();
+
+            _selectedCard = selectCard;
         }
 
         private void RenderCards()
@@ -51,6 +70,7 @@ namespace Pages.Enhance
             for (int i = 0; i < _listCardsInCollection.Count; i++)
             {
                 EnchanceCardCell cell = Instantiate(_cardCellTemplate, _container);
+                cell.Init(_assetProviderService, this, _selectPanel);
                 cell.Render(_listCardsInCollection[i].CardData);
                 cell.SetLinkOnCardInCollection(_listCardsInCollection[i]);
             }
@@ -71,13 +91,6 @@ namespace Pages.Enhance
 
                 _enchanceCardsForDeleteCollection.DisplayCardsForDelete(_listCardsInCollection);
             }
-        }
-
-        public void SelectCard(CardCollectionCell selectCard)
-        {
-            if (selectCard == null) throw new System.ArgumentNullException();
-
-            _selectedCard = selectCard;
         }
     }
 }

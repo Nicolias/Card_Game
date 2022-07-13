@@ -44,8 +44,8 @@ public class DailyRewards : MonoBehaviour
 
     private bool _canClaimReward;
     private int _maxStreakCount;
-    private float _claimCoolDown = 24f / 24 / 60 / 6;
-    private float _claimDeadLine = 48f / 24 / 60 / 6;
+    private float _claimCoolDown = 24f;
+    private float _claimDeadLine = 48f;
 
     private List<RewardPref> _rewardPrefabs = new();
 
@@ -60,12 +60,37 @@ public class DailyRewards : MonoBehaviour
 
     private void OnEnable()
     {
-        StartCoroutine(RewardsStateUpdater());        
+        _claimButton.onClick.AddListener(ClaimReward);
+        StartCoroutine(RewardsStateUpdater());
     }
 
     private void OnDisable()
     {
+        _claimButton.onClick.RemoveAllListeners();
         StopAllCoroutines();
+    }
+
+    private void ClaimReward()
+    {
+        if (_canClaimReward == false)
+            return;
+
+        var reward = _rewards[_currentStreak];
+        switch (reward.Type)
+        {
+            case Reward.RewardType.Gold:
+                Debug.Log("Gold");
+                break;
+            case Reward.RewardType.Cristal:
+                Debug.Log("Cristal");
+                break;
+        }
+
+        _lastClaimTime = DateTime.UtcNow;
+        _currentStreak += 1;
+
+        if (_currentStreak >= _maxStreakCount)
+            _currentStreak = _maxStreakCount - 1;
     }
 
     private void InitPrefabs()
@@ -124,28 +149,5 @@ public class DailyRewards : MonoBehaviour
 
         for (int i = 0; i < _rewardPrefabs.Count; i++)
             _rewardPrefabs[i].SetRewardData(i, _currentStreak, _rewards[i], _canClaimReward);
-    }
-
-    public void ClaimReward()
-    {
-        if (_canClaimReward == false)
-            return;
-
-        var reward = _rewards[_currentStreak];
-        switch (reward.Type)
-        {
-            case Reward.RewardType.Gold:
-                Debug.Log("Gold");
-                break;
-            case Reward.RewardType.Cristal:
-                Debug.Log("Cristal");
-                break;
-        }
-
-        _lastClaimTime = DateTime.UtcNow;
-        _currentStreak += 1;
-
-        if (_currentStreak >= _maxStreakCount)
-            _currentStreak = _maxStreakCount - 1;
     }
 }

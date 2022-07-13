@@ -6,7 +6,8 @@ namespace Pages.Enhance
 {
     public class EnchanceUpgradeCard : MonoBehaviour
     {    
-        [SerializeField] private EnchanceCardCollection _enhanceCardCollection;    
+        [SerializeField] private EnchanceCardCollection _enhanceCardCollection;
+        [SerializeField] private Enchance _enhance;
 
         [SerializeField] private Image _UIIcon;
         [SerializeField] private Sprite _standardSprite;
@@ -16,32 +17,26 @@ namespace Pages.Enhance
         private CardCollectionCell _cardCell;
         public CardCollectionCell CardCell => _cardCell;
 
+        [SerializeField] private Button _resetButton;
+
         private void Start()
         {
             _cardStatistic = FindObjectOfType<EnhanceCardForUpgradeStatistic>().gameObject.GetComponent<EnhanceCardForUpgradeStatistic>();
         }
 
         private void OnEnable()
-        {        
+        {
+            _cardCell = null;
+            _UIIcon.sprite = _standardSprite;
+            _resetButton.onClick.AddListener(Reset);
             GetComponent<Button>().onClick.AddListener(OpenCardCollection);
-            Reset();
+
         }
 
         private void OnDisable()
         {
+            _resetButton.onClick.RemoveListener(Reset);
             GetComponent<Button>().onClick.RemoveListener(OpenCardCollection);
-        }
-
-        private void OpenCardCollection()
-        {
-            _enhanceCardCollection.gameObject.SetActive(true);
-            _enhanceCardCollection.UpgradeCard = this;
-        }
-
-        private void Reset()
-        {
-            _cardCell = null;
-            _UIIcon.sprite = _standardSprite;
         }
 
         public void SetCardForUpgrade(CardCollectionCell card)
@@ -53,6 +48,21 @@ namespace Pages.Enhance
             _cardStatistic.Render(this);
         
             print(card.LevelPoint);
+        }
+
+
+        private void OpenCardCollection()
+        {
+            _enhanceCardCollection.gameObject.SetActive(true);
+            _enhanceCardCollection.UpgradeCard = this;
+        }
+
+        private void Reset()
+        {
+            _cardCell = null;
+            _UIIcon.sprite = _standardSprite;
+            _enhance.gameObject.SetActive(false);
+            _enhance.gameObject.SetActive(true);
         }
     }
 }

@@ -18,22 +18,50 @@ namespace Infrastructure
 
         [SerializeField] 
         private ShopItemBottle[] _items;
+
+        [SerializeField] 
+        private AudioSource _audioSource;
+
+        [SerializeField] 
+        private AudioClip[] _audioClips;
         
+        [SerializeField] 
+        private Texture2D _cursorImage;
+        
+        [SerializeField] 
+        private Texture2D _cursorClickImage;
+        
+        private CoroutineStarterService _coroutineStarterService;
         private DataSaveLoadService _dataSaveLoadService;
         private AssetProviderService _assetProviderService;
         private LocalDataService _localDataService;
+        private SceneLoadService _sceneLoadService;
+        private SoundService _soundService;
         
         public override void InstallBindings()
         {
+            BindCoroutineStarter();
             BindAssetProvider();
             BindDataSaveLoad();
             BindPlayerData();
+            BindSceneLoad();
+            BindSound();
             InitAllService();
+        }
+
+        private void BindCoroutineStarter()
+        {
+            _coroutineStarterService = new CoroutineStarterService(this);
+            
+            Container
+                .Bind<CoroutineStarterService>()
+                .FromInstance(_coroutineStarterService)
+                .AsSingle();
         }
 
         private void BindAssetProvider()
         {
-            _assetProviderService = new AssetProviderService(_frames, _allCards, _items);
+            _assetProviderService = new AssetProviderService(_frames, _allCards, _items, _cursorImage, _cursorClickImage);
             
             Container
                 .Bind<AssetProviderService>()
@@ -63,11 +91,34 @@ namespace Infrastructure
                 .AsSingle();
         }
 
+        private void BindSceneLoad()
+        {
+            _sceneLoadService = new SceneLoadService(_coroutineStarterService);
+            
+            Container
+                .Bind<SceneLoadService>()
+                .FromInstance(_sceneLoadService)
+                .AsSingle();
+        }
+
+        private void BindSound()
+        {
+            _soundService = new SoundService(_audioSource, _audioClips);
+            
+            Container
+                .Bind<SoundService>()
+                .FromInstance(_soundService)
+                .AsSingle();
+        }
+        
         private void InitAllService()
         {
             AllServices.AssetProviderService = _assetProviderService;
             AllServices.DataSaveLoadService = _dataSaveLoadService;
             AllServices.LocalDataService = _localDataService;
+            AllServices.SceneLoadService = _sceneLoadService;
+            AllServices.CoroutineStarterService = _coroutineStarterService;
+            AllServices.SoundService = _soundService;
         }
     }
 }

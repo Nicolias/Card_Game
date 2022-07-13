@@ -41,6 +41,9 @@ namespace Pages.Battle
         [SerializeField] 
         private GameObject _battleChouse;
 
+        [SerializeField] 
+        private UpPanel _upPanel;
+        
         private List<Card> _enemyDefCards = new();
         private int _baseEnemyDefValue;
         private Card[] _enemyCards;
@@ -61,14 +64,7 @@ namespace Pages.Battle
         
         private void Awake()
         {
-            gameObject.SetActive(false);
-        }
-
-        private void OnEnable()
-        {
-            RenderEnemyDefCard();
-        
-            _playerCards = _dataSaveLoadService.PlayerData.AttackDecks;
+            //gameObject.SetActive(false);
         }
 
         public void SetEnemyDefCard(List<Card> enemyDefCards, int amountEnemyDefValue)
@@ -79,8 +75,14 @@ namespace Pages.Battle
 
         public void StartFight()
         {
+            RenderEnemyDefCard();
+            _playerCards = _dataSaveLoadService.PlayerData.AttackDecks;
+            
+            print(_playerCards);
+            
             gameObject.SetActive(true);
-        
+            _upPanel.Block();
+            
             foreach (var playerCard in _playerCardAnimators) 
                 playerCard.Hide();
 
@@ -95,6 +97,9 @@ namespace Pages.Battle
 
         private void HideNonAllActiveCards()
         {
+            if (_playerCards == null)
+                Debug.LogError("Нет карт в колоде игрока");
+            
             HideNonActiveCards(_playerCards, _playerCardAnimators);
             HideNonActiveCards(_enemyCards, _enemyCardAnimators);
         }
@@ -136,6 +141,7 @@ namespace Pages.Battle
             else
                 OnPlayerLose?.Invoke();
 
+            _upPanel.Unblock();
             gameObject.SetActive(false);
             _battleChouse.SetActive(true);
         }
@@ -180,6 +186,7 @@ namespace Pages.Battle
                     Card randomMyCard = myCards[randomNumber];
 
                     var myCardAnimator = myCardAnimators[randomNumber];
+                    myCardAnimator.transform.parent = myCardAnimator.transform.parent;
                     myCardAnimator.Selected();
                     yield return new WaitForSeconds(0.2f);
 
@@ -273,13 +280,13 @@ namespace Pages.Battle
                 if (skillValue != 0)
                 {
                     amountDamage += skillValue;
-                    _battleCardsStatistic.AddPlayerCardWhileUsedSkill(cardCell.Name, cardCell.AttackSkillName);
+                    //_battleCardsStatistic.AddPlayerCardWhileUsedSkill(cardCell.Name, cardCell.AttackSkillName);
                 }
             }
 
             amountDamage += _localDataService.Attack;
 
-            _battleCardsStatistic.AddAmountDamage(amountDamage.ToString());
+            //_battleCardsStatistic.AddAmountDamage(amountDamage.ToString());
 
             return amountDamage;
         }
@@ -299,6 +306,9 @@ namespace Pages.Battle
     
         private void HideNonActiveCards(Card[] cards, CardAnimator[] cardAnimators)
         {
+            print(cards);
+            print(cardAnimators);
+            
             for (int i = 0; i < cards.Length; i++)
             {
                 if (cards[i].Id == 0)
@@ -315,7 +325,7 @@ namespace Pages.Battle
                 if (Random.Range(1, 100) == 1 && enemyCard.Rarity != RarityCard.Empty)
                 {
                     amountDef += enemyCard.BonusDefSkill;
-                    _battleCardsStatistic.AddEnemyCardWhileUsedSkill(enemyCard.Name, enemyCard.AttackSkillName);
+                    //_battleCardsStatistic.AddEnemyCardWhileUsedSkill(enemyCard.Name, enemyCard.AttackSkillName);
                 }
             }
 

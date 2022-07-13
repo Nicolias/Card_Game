@@ -15,7 +15,7 @@ namespace Pages.Quest
         [Range(50, 500)] 
         public int Damage;
 
-        [Range(25, 2000)] 
+        [Range(100, 2000)] 
         public int Exp;
     }
 }

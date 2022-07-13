@@ -1,6 +1,9 @@
 using System.Collections;
 using System.Collections.Generic;
+using Infrastructure.Services;
+using Pages.Shop;
 using UnityEngine;
+using Zenject;
 
 public class ShopCategoryRendering : MonoBehaviour
 {
@@ -11,6 +14,14 @@ public class ShopCategoryRendering : MonoBehaviour
     [SerializeField] 
     private ConfirmWindow _confirmWindow;
 
+    private AssetProviderService _assetProviderService;
+
+    [Inject]
+    private void Construct(AssetProviderService assetProviderService)
+    {
+        _assetProviderService = assetProviderService;
+    }
+    
     private void OnEnable()
     {
         _confirmWindow.gameObject.SetActive(false);
@@ -30,7 +41,7 @@ public class ShopCategoryRendering : MonoBehaviour
         _shopItems.ForEach(item =>
         {
             var cell = Instantiate(_shopItemCellTemplate, _container);
-            cell.Init(_confirmWindow);
+            cell.Init(_confirmWindow, _assetProviderService);
             cell.Render(item);
         });
 

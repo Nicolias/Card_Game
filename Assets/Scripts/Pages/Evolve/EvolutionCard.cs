@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using Infrastructure.Services;
+using Pages.Evolve;
 using UnityEngine;
 using UnityEngine.UI;
 using Zenject;
@@ -40,20 +41,6 @@ public class EvolutionCard : MonoBehaviour
         _evolution.OnEvolvedCard -= Reset;
     }
 
-    private void OpenCollectionCard()
-    {
-        _evolveCardCollection.gameObject.SetActive(true);
-        _evolveCardCollection.OneOfCardInEvolutioin = this;
-    }
-
-    private void Reset()
-    {
-        CardCell = null;
-        _UIIcon.sprite = _standardSprite;
-        _frame.gameObject.SetActive(false);
-        _isSet = false;
-    }
-
     public void SetCard(CardCollectionCell selectCard)
     {
         CardCell = selectCard;
@@ -61,5 +48,19 @@ public class EvolutionCard : MonoBehaviour
         _frame.gameObject.SetActive(true);
         _frame.sprite = CardCell.Card.GetFrame(_assetProviderService.Frames);
         _isSet = true;
+    }
+
+    public void Reset()
+    {
+        CardCell = null;
+        _UIIcon.sprite = _standardSprite;
+        _frame.gameObject.SetActive(false);
+        _isSet = false;
+    }
+
+    private void OpenCollectionCard()
+    {
+        _evolveCardCollection.gameObject.SetActive(true);
+        _evolveCardCollection.OneOfCardInEvolutioin = this;
     }
 }

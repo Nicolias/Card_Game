@@ -20,6 +20,28 @@ namespace Infrastructure.Services
         
         public PlayerData PlayerData => _playerData;
 
+        public int AmountCards 
+        {
+            get
+            {
+                int amountCard = 0;
+
+                foreach (var card in _playerData.AttackDecks)
+                {
+                    if (card.Id != 0)
+                        amountCard++;
+                }
+
+                foreach (var card in _playerData.DefDecks)
+                {
+                    if (card.Id != 0)
+                        amountCard++;
+                }
+
+                return amountCard += _playerData.InventoryDecksData.Length;
+            }
+        }
+
         public DataSaveLoadService(Card[] allCards, Sprite[] avatars, ShopItemBottle[] allItems)
         {
             _allCards = allCards;
@@ -71,14 +93,10 @@ namespace Infrastructure.Services
 
         public void IncreaseEnergy(int energyValue)
         {
-            if (_playerData.Energy > 25) 
+            if (energyValue > _playerData.MaxEnergy) 
                 throw new ArgumentOutOfRangeException();
 
-            if (energyValue + _playerData.Energy >= 25)
-                _playerData.Energy = _playerData.MaxEnergy;
-            else
-                _playerData.Energy += energyValue;
-
+            _playerData.Energy = energyValue;
             Save();
         }
 
@@ -128,6 +146,18 @@ namespace Infrastructure.Services
             Save();
         }
 
+        public void SetNickname(string text)
+        {
+            _playerData.Nickname = text;
+            Save();
+        }
+
+        public void SetCountQuestPassed(int count)
+        {
+            _playerData.CountQuestPassed = count;
+            Save();
+        }
+        
         public void SetInventoryDecks(List<CardCollectionCell> cardsCardCollectionCells)
         {
             var cards = new CardData[cardsCardCollectionCells.Count];
@@ -189,7 +219,7 @@ namespace Infrastructure.Services
                 Nickname = RandomNickname(),
                 AvatarId = RandomAvatarId(),
                 FirstDayInGame = DateTime.Now,
-                Rank = 1,
+                Rank = 0,
                 Level = 1,
                 EXP = 0,
                 MaxExp = 100,

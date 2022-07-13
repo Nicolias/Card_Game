@@ -35,17 +35,26 @@ namespace Pages.Quest
         
         private bool _isOpen;
         public EnemyQuestData[] EnemyQuestsData => _enemyQuestsData;
+        public int Id;
 
         private void OnEnable()
         {
             if (_isLocked == false)
+            {
                 _lockedImage.SetActive(false);
+
+                _chapterList.InitAllChapter();
+                _chapterList.CloseAllChapters();
+                Open();
+            }
         }
 
         public void UnlockedChapter()
         {
             _isLocked = false;
             _lockedImage.SetActive(false);
+
+           // Toggle();
         }
 
         private void Toggle()

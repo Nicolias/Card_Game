@@ -44,7 +44,12 @@ namespace Pages.Quest
         
         [SerializeField] 
         private Enemy _enemyPrefab;
-        
+
+        [SerializeField]
+        private PlayerAvatarQuest _avatar;
+
+        [SerializeField] private UpPanel _upPanel;
+
         private LocalDataService _localDataService;
         private DataSaveLoadService _dataSaveLoadService;
         private AssetProviderService _assetProviderService;
@@ -73,7 +78,7 @@ namespace Pages.Quest
             }
             
             _healthSliderAnimator.Slider.maxValue = _localDataService.MaxHealth();        
-            _enemyHealthSliderAnimator.Slider.maxValue = GetEnemiesMaxHealth();
+            _enemyHealthSliderAnimator.Slider.maxValue = EnemiesMaxHealth();
             gameObject.SetActive(true);
             InitFight();
             StartCoroutine(Fight());
@@ -85,17 +90,19 @@ namespace Pages.Quest
 
             _experienceSliderAnimator.Slider.maxValue = _dataSaveLoadService.PlayerData.MaxExp;
             _experienceSliderAnimator.Slider.value = _dataSaveLoadService.PlayerData.EXP;
-            _playerExpPerProcentText.text = (_dataSaveLoadService.PlayerData.EXP / _dataSaveLoadService.PlayerData.MaxExp * 100).ToString() + " %";
             _experienceBeforeSlider.maxValue = _dataSaveLoadService.PlayerData.MaxExp;
             _experienceBeforeSlider.value = 0;
             
-            _healthSliderAnimator.Slider.value = _localDataService.Health;
-            _playerHealthPerProcentText.text = (_localDataService.Health / _localDataService.MaxHealth() * 100).ToString() + " %"; ;
+            _healthSliderAnimator.Slider.value = _localDataService.MaxHealth();
 
-            _enemyHealthSliderAnimator.Slider.value = GetEnemiesMaxHealth();
+            _enemyHealthSliderAnimator.Slider.value = EnemiesMaxHealth();
+
             _enemyHelthPerProcentText.text = "100 %";
+            _playerExpPerProcentText.text = (_dataSaveLoadService.PlayerData.EXP / _dataSaveLoadService.PlayerData.MaxExp * 100).ToString() + " %";
+            _playerHealthPerProcentText.text = "100 %";
                     
             _dataSaveLoadService.DecreaseEnergy(_questConfirmWindow.RequiredAmountEnergy);
+            _localDataService.RevertHealth();
         }
         
         private IEnumerator Fight()
@@ -108,10 +115,8 @@ namespace Pages.Quest
             {
                 var randomEnemy = _enemies[Random.Range(0, _enemies.Length)];
                 
-                if (randomEnemy.Alive())
-                {
+                if (randomEnemy.Alive()) 
                     TurnPlayer(randomEnemy);
-                }
                 else
                 {
                     foreach (var enemy in _enemies)
@@ -127,7 +132,7 @@ namespace Pages.Quest
 
                 yield return new WaitForSeconds(1);
 
-                if (GetEnemiesHealth() <= 0)
+                if (EnemiesHealth() <= 0)
                     _isFight = false;
                 else
                     TurnEnemies();
@@ -146,7 +151,8 @@ namespace Pages.Quest
             
             gameObject.SetActive(false);
             _questList.SetActive(true);
-            _localDataService.RevertHealth();
+
+            _upPanel.Unblock();
         }
 
         private void DestroyAlllEnemies()
@@ -157,6 +163,7 @@ namespace Pages.Quest
 
         private IEnumerator PlayerLose()
         {
+            _avatar.Darkening();
             yield return new WaitForSeconds(1f);
             _loseWindow.SetActive(true);
 
@@ -165,7 +172,7 @@ namespace Pages.Quest
 
         private IEnumerator PlayerWin()
         {
-            _dataSaveLoadService.IncreaseEXP(GetEnemiesExp());
+            _dataSaveLoadService.IncreaseEXP(EnemiesExp());
             _playerExpPerProcentText.text =
                 (_dataSaveLoadService.PlayerData.EXP / _dataSaveLoadService.PlayerData.MaxExp * 100).ToString() + " %";
 
@@ -195,7 +202,7 @@ namespace Pages.Quest
             yield return new WaitForSeconds(2f);
             _winWindow.OpenPrizeWindow();
             _chapter.NextChapter.UnlockedChapter();
-            
+            _dataSaveLoadService.SetCountQuestPassed(_chapter.NextChapter.Id);
             //OnPlayerWin?.Invoke();
         }
 
@@ -208,14 +215,16 @@ namespace Pages.Quest
             var effect = Instantiate(_attackEffect, enemy.transform.position, Quaternion.identity);
             _shaking.Shake(0.5f, 10);
             Destroy(effect.gameObject, 4);
-            _enemyHealthSliderAnimator.UpdateSlider(GetEnemiesHealth(), GetEnemiesMaxHealth(), 1, _enemyHealthSliderAnimator.Slider.value);
-            _enemyHelthPerProcentText.text = (GetEnemiesHealth() / GetEnemiesMaxHealth() * 100).ToString() + " %";
+            _enemyHealthSliderAnimator.UpdateSlider(EnemiesHealth(), EnemiesMaxHealth(), 1, _enemyHealthSliderAnimator.Slider.value);
+            _enemyHelthPerProcentText.text = (EnemiesHealth() / EnemiesMaxHealth() * 100).ToString() + " %";
         }
                 
         private void TurnEnemies()
         {
-            _localDataService.TakeDamage(GetEnemiesDamage());
+            _localDataService.TakeDamage(EnemiesDamage());
+            var effect = Instantiate(_attackEffect, _avatar.transform.position, Quaternion.identity);
             _shaking.Shake(0.5f, 10);
+            Destroy(effect.gameObject, 4);
             _healthSliderAnimator.UpdateSlider(_localDataService.Health, _localDataService.MaxHealth(), 1, _healthSliderAnimator.Slider.value);
             _playerHealthPerProcentText.text = (_localDataService.Health / _localDataService.MaxHealth() * 100).ToString() + " %";
 
@@ -223,7 +232,7 @@ namespace Pages.Quest
                 _isFight = false;
         }
 
-        private float GetEnemiesHealth()
+        private float EnemiesHealth()
         {
             var health = 0f;
 
@@ -233,7 +242,7 @@ namespace Pages.Quest
             return health;
         }
         
-        private float GetEnemiesMaxHealth()
+        private float EnemiesMaxHealth()
         {
             var maxHealth = 0f;
 
@@ -243,7 +252,7 @@ namespace Pages.Quest
             return maxHealth;
         }
         
-        private int GetEnemiesExp()
+        private int EnemiesExp()
         {
             var exp = 0;
 
@@ -253,7 +262,7 @@ namespace Pages.Quest
             return exp;
         }
         
-        private int GetEnemiesDamage()
+        private int EnemiesDamage()
         {
             var damage = 0;
 
