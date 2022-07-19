@@ -14,6 +14,9 @@ public abstract class CardCell : MonoBehaviour, ICard
     protected Image _icon;
     
     [SerializeField] 
+    protected Image _frame;
+    
+    [SerializeField] 
     private CardStatsPanel _cardStatsPanel;
     
     protected Card _card;
@@ -56,11 +59,23 @@ public abstract class CardCell : MonoBehaviour, ICard
             if (_cardData.Id != 0)
             {
                 _cardStatsPanel.gameObject.SetActive(true);
-                _cardStatsPanel.Init(_cardData.Attack.ToString(), _cardData.Defence.ToString(), _cardData.Health.ToString(), _card.SkillIcon);
+                _cardStatsPanel.Init(_cardData.Attack.ToString(), _cardData.Defence.ToString(), _cardData.Health.ToString(), _card.Rarity.ToString(), _cardData.Level.ToString());
             }
             else
                 _cardStatsPanel.gameObject.SetActive(false);
         }
+
+        if (_frame)
+        {
+            if (_cardData.Id != 0)
+            {
+                _frame.sprite = _card.GetFrame();
+                _frame.gameObject.SetActive(true);
+            }
+            else
+                _frame.gameObject.SetActive(false);
+        }
+
 
         if (cardData.Evolution == 1)
             _icon.sprite = _card.ImageFirstEvolution;

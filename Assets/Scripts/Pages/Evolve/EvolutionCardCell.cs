@@ -10,9 +10,6 @@ public class EvolutionCardCell : CardCell
     [SerializeField] 
     private Button _button;
 
-    [SerializeField] 
-    private ChangingCursorHover _changingCursorHover;
-    
     private CardCollectionCell _cardInCollection;
     private EvolveCardCollection _evolveCardCollection;
     private SelectPanel _selectPanel;
@@ -37,7 +34,6 @@ public class EvolutionCardCell : CardCell
         
         _evolveCardCollection = evolveCardCollection;
         _selectPanel = selectPanel;
-        _changingCursorHover.Init(assetProviderService);
     }
     
     public void SetLinkOnCardInCollection(CardCollectionCell cardInCollection)

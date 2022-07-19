@@ -1,8 +1,10 @@
+using Infrastructure.Services;
 using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using Zenject;
 
 public enum PrizeType
 {
@@ -11,25 +13,37 @@ public enum PrizeType
 }
 
 [System.Serializable]
-public class Prize 
+public class Prize : IRoulette
 {
-    public Sprite Sprite;
-    public int MinNumberPrize;
-    public int MaxNumberPrize;
-    public int AmountPrize { get; set; }
+    [Inject]
+    private void Construct(AssetProviderService assetProviderService)
+    {
+        _goldSprite = assetProviderService.GoldSprite;
+        _cristalSprite = assetProviderService.CristalSprite;
+    }
+
+    [SerializeField] protected int _minPrizeValue;
+    public virtual int AmountPrize => _minPrizeValue;
+
     public PrizeType TypePrize;
 
-    public Sprite UIIcon => Sprite;
+    private Sprite _goldSprite, _cristalSprite;
+
+    public Sprite UIIcon 
+    {
+        get 
+        {
+            return TypePrize == PrizeType.Gold ? _goldSprite : _cristalSprite;
+        }
+    }
     public string Description => TypePrize.ToString();
 
-    //public void TakeItem()
-    //{
-    //    var roulettePage = FindObjectOfType<RoulettePage>().gameObject.GetComponent<RoulettePage>();
+    public void TakeItem(RoulettePage roulettePage)
+    {
+        if (TypePrize == PrizeType.Cristal)
+            roulettePage.AccrueCristal(AmountPrize);
 
-    //    if (TypePrize == PrizeType.Cristal)
-    //        roulettePage.AccrueCristal();
-
-    //    if (TypePrize == PrizeType.Gold)
-    //        roulettePage.AccrueGold();
-    //}
+        if (TypePrize == PrizeType.Gold)
+            roulettePage.AccrueGold(AmountPrize);
+    }
 }

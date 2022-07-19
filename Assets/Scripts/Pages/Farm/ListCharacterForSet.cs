@@ -1,7 +1,12 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
+using Infrastructure.Services;
+using Pages.Farm;
 using UnityEngine;
+using UnityEngine.Events;
 using UnityEngine.UI;
+using Zenject;
 
 public enum PlaceCharacterType
 {
@@ -11,14 +16,24 @@ public enum PlaceCharacterType
 
 public class ListCharacterForSet : MonoBehaviour
 {
+    public event UnityAction OnCharacterSelected;
+
     [SerializeField] private Transform _container;
     [SerializeField] private CharacterCell _characterCellTamplate;
+    [SerializeField] private List<Sprite> _cardSprite;
 
-    [SerializeField] private List<Sprite> _nftSprite, _cardSprite;
-
+    private List<Sprite> _nftSprites;
     private Place _place;
     private List<CharacterCell> _characterCells = new();
 
+    public List<CharacterCell> CharacterCells => _characterCells;
+
+    [Inject]
+    private void Construct(AssetProviderService assetProviderService)
+    {
+        _nftSprites = assetProviderService.AllNFT.ToList();
+    }
+    
     private void OnDisable()
     {
         foreach (var cell in _characterCells.ToArray())
@@ -32,21 +47,21 @@ public class ListCharacterForSet : MonoBehaviour
 
     public void OpenCharacterList(Place place)
     {
-        gameObject.SetActive(false);
         gameObject.SetActive(true);
 
         _place = place;
 
         if (place.Data.CharacterType == PlaceCharacterType.NFT)
-            Render(_nftSprite);
+            Render(_nftSprites);
         else
             Render(_cardSprite);
     }
 
-    public void SelectCharacter(CharacterCell character)
+    private void SelectCharacter(CharacterCell character)
     {
         _place.SetCharacter(character);
-        _ = _nftSprite.Contains(character.CharacterSprite) ? _nftSprite.Remove(character.CharacterSprite) : _cardSprite.Remove(character.CharacterSprite);
+        _ = _nftSprites.Contains(character.CharacterSprite) ? _nftSprites.Remove(character.CharacterSprite) : _cardSprite.Remove(character.CharacterSprite);
+        OnCharacterSelected?.Invoke();
         gameObject.SetActive(false);
     }
 

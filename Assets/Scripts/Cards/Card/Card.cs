@@ -8,7 +8,10 @@ public enum RarityCard
 {
     Empty,
     Standart,
-    Rarity
+    Rare,
+    HightRare,
+    Epic,
+    Legendary
 }
 
 public enum RaceCard
@@ -121,15 +124,15 @@ public class Card : ScriptableObject, ICard, IRoulette
         return cardData;
     }
     
-    public void TakeItem()
+    public void TakeItem(RoulettePage roulettePage)
     {
-        var roulettePage = FindObjectOfType<RoulettePage>().gameObject.GetComponent<RoulettePage>();
-
         roulettePage.AccrueCard(GetCardData());
     }
 
-    public Sprite GetFrame(Sprite[] _frames)
+    public Sprite GetFrame()
     {
+        var _frames = AllServices.AssetProviderService.Frames;
+        
         switch (_race)
         {
             case RaceCard.Demons:

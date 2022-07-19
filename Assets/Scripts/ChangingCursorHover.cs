@@ -1,28 +1,34 @@
 ﻿using Infrastructure.Services;
 using UnityEngine;
 using UnityEngine.EventSystems;
-using Zenject;
 
 public class ChangingCursorHover : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
 {
     private Texture2D _cursorTexture;
     private CursorMode _cursorMode = CursorMode.Auto;
-    private AssetProviderService _assetProviderService;
-    
-    [Inject]
-    private void Construct(AssetProviderService assetProviderService)
+    private bool _isPointerEnter;
+
+    private void OnDisable()
     {
-        _assetProviderService = assetProviderService;
+        if (_isPointerEnter)
+            SetDefaultCursor();
     }
 
-    public void Init(AssetProviderService assetProviderService)
+    public void OnPointerEnter(PointerEventData eventData)
     {
-        _assetProviderService = assetProviderService;
+        SetClickCursor();
+        _isPointerEnter = true;
     }
-    
-    public void OnPointerEnter(PointerEventData eventData) => 
-        Cursor.SetCursor(_assetProviderService.CursorClickImage, Vector2.zero, _cursorMode);
 
-    public void OnPointerExit(PointerEventData eventData) => 
-        Cursor.SetCursor(_assetProviderService.CursorImage, Vector2.zero, _cursorMode);
+    public void OnPointerExit(PointerEventData eventData)
+    {
+        SetDefaultCursor();
+        _isPointerEnter = false;
+    }
+
+    private void SetClickCursor() => 
+        Cursor.SetCursor(AllServices.AssetProviderService.CursorClickImage, Vector2.zero, _cursorMode);
+    
+    private void SetDefaultCursor() => 
+        Cursor.SetCursor(AllServices.AssetProviderService.CursorImage, Vector2.zero, _cursorMode);
 }
